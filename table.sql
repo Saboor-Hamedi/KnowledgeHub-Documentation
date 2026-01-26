@@ -34,7 +34,6 @@ using (true);
 -- 3. Allow anyone to read tags
 -- (This was already true in your original file, but good to double check)
 
-
 alter table profiles enable row level security;
 
 create policy "Users read own profile"
