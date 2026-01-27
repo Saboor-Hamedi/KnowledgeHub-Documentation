@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { Lock, User, Shield, AlertTriangle, Save, Loader2 } from 'lucide-react'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 export default function Settings() {
   const [user, setUser] = useState(null)
@@ -16,10 +17,12 @@ export default function Settings() {
   const [passError, setPassError] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    async function getUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
       setLoading(false)
-    })
+    }
+    getUser()
   }, [])
 
   const handleUpdatePassword = async (e) => {
@@ -73,6 +76,8 @@ export default function Settings() {
     setPassLoading(false)
   }
 
+  if (loading) return <LoadingSpinner />
+
   if (!user) {
      return (
         <div className="text-center py-20 text-gray-500">
@@ -82,7 +87,11 @@ export default function Settings() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8"
+    >
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
         <p className="mt-2 text-gray-500">Manage your account preferences and security.</p>
@@ -196,6 +205,6 @@ export default function Settings() {
         </div>
 
       </div>
-    </div>
+    </motion.div>
   )
 }

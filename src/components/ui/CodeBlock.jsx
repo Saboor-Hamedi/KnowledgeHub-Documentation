@@ -21,8 +21,8 @@ export default function CodeBlock({ inline, className, children, ...props }) {
   }
 
   return (
-    <div className="group relative my-4 rounded-xl bg-gray-50 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-100/50">
+    <span className="group relative my-4 rounded-xl bg-gray-50 overflow-hidden block font-sans">
+      <span className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-100/50">
         <span className="text-xs font-medium text-gray-500 uppercase font-mono not-italic">
           {language || 'text'}
         </span>
@@ -34,12 +34,12 @@ export default function CodeBlock({ inline, className, children, ...props }) {
           {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
           <span className="text-[10px] font-medium not-italic">{copied ? 'Copied!' : 'Copy'}</span>
         </button>
-      </div>
-      <div className="overflow-x-auto p-4 bg-white/50">
+      </span>
+      <span className="overflow-x-auto p-4 bg-white/50 block">
         <code className={`${className} !bg-transparent !p-0 text-sm font-mono text-gray-800 leading-relaxed block not-italic`} {...props}>
           {children}
         </code>
-      </div>
-    </div>
+      </span>
+    </span>
   )
 }

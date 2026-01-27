@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useNavigate } from 'react-router-dom'
 import CodeBlock from './ui/CodeBlock'
+import LoadingSpinner from './ui/LoadingSpinner'
 
 export default function FeaturedPost() {
   const [post, setPost] = useState(null)
@@ -52,22 +53,7 @@ export default function FeaturedPost() {
     }
   }
 
-  if (loading) return (
-    <div className="mb-12 space-y-4 animate-pulse">
-       <div className="flex items-center gap-3 mb-3">
-          <div className="h-3 w-20 bg-gray-100 rounded" />
-          <div className="h-3 w-3 bg-gray-100 rounded-full" />
-          <div className="h-3 w-20 bg-gray-100 rounded" />
-       </div>
-       <div className="h-8 w-3/4 bg-gray-200 rounded" />
-       <div className="space-y-2 mt-6">
-          <div className="h-4 w-full bg-gray-100 rounded" />
-          <div className="h-4 w-full bg-gray-100 rounded" />
-          <div className="h-4 w-5/6 bg-gray-100 rounded" />
-          <div className="h-4 w-full bg-gray-100 rounded" />
-       </div>
-    </div>
-  )
+  if (loading) return <LoadingSpinner />
   if (!post) return null
 
   return (

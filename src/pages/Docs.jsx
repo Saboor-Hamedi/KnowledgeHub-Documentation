@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase'
 import FeaturedPost from '../components/FeaturedPost'
 import SnippetsDemo from '../components/SnippetsDemo'
 import CodeBlock from '../components/ui/CodeBlock'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 const DocBreadcrumb = ({ label }) => (
   <div className="mb-8 flex items-center gap-2 text-sm text-gray-500">
@@ -37,14 +38,24 @@ const SidebarItem = ({ icon, label, to, active }) => (
 )
 
 const Introduction = () => (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1, transition: { duration: 0.4 } }} 
+      exit={{ opacity: 0 }} 
+      className="space-y-12"
+    >
         <DocBreadcrumb label="Introduction" />
         <FeaturedPost />         
     </motion.div>
 )
 
 const AuthenticationDoc = () => (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1, transition: { duration: 0.4 } }} 
+      exit={{ opacity: 0 }} 
+      className="space-y-8"
+    >
         <DocBreadcrumb label="Authentication" />
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Authentication</h1>
         <div className="text-lg text-gray-500 leading-relaxed">
@@ -70,7 +81,12 @@ const AuthenticationDoc = () => (
 )
 
 const SchemaDoc = () => (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1, transition: { duration: 0.4 } }} 
+      exit={{ opacity: 0 }} 
+      className="space-y-8"
+    >
         <DocBreadcrumb label="Snippet Schema" />
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Snippet Schema</h1>
         <div className="text-lg text-gray-500 leading-relaxed">
@@ -163,16 +179,18 @@ export default function Docs() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 lg:pl-12 px-2 sm:px-6 lg:px-0">
+        <main className="flex-1 min-w-0 lg:pl-12 px-2 sm:px-6 lg:px-0 min-h-[80vh]">
             
-            <Routes>
-                <Route index element={<Introduction />} />
-                <Route path="installation" element={<SnippetViewer title="Installation" />} />
-                <Route path="auth" element={<SnippetViewer title="Authentication" />} />
-                <Route path="schema" element={<SchemaDoc />} />
-                <Route path="snippet/:id" element={<SnippetViewer />} />
-                <Route path="*" element={<div className="text-center py-20 text-gray-500">Documentation section coming soon.</div>} />
-            </Routes>
+            <AnimatePresence mode="wait">
+              <Routes location={location} key={location.pathname}>
+                  <Route index element={<Introduction />} />
+                  <Route path="installation" element={<SnippetViewer title="Installation" />} />
+                  <Route path="auth" element={<SnippetViewer title="Authentication" />} />
+                  <Route path="schema" element={<SchemaDoc />} />
+                  <Route path="snippet/:id" element={<SnippetViewer />} />
+                  <Route path="*" element={<div className="text-center py-20 text-gray-500">Documentation section coming soon.</div>} />
+              </Routes>
+            </AnimatePresence>
 
             {/* Pagination */}
             <div className="mt-20 flex items-center justify-between border-t border-gray-200 pt-10">
@@ -247,14 +265,9 @@ const SnippetViewer = ({ title: propTitle }) => {
   }
 
   if (loading) return (
-    <div className="animate-pulse space-y-4">
-      <div className="h-4 w-32 bg-gray-200 rounded" />
-      <div className="h-10 w-3/4 bg-gray-200 rounded" />
-      <div className="space-y-2">
-        <div className="h-4 w-full bg-gray-100 rounded" />
-        <div className="h-4 w-full bg-gray-100 rounded" />
-        <div className="h-4 w-2/3 bg-gray-100 rounded" />
-      </div>
+    <div>
+        <DocBreadcrumb label={propTitle || "Loading..."} />
+        <LoadingSpinner />
     </div>
   )
 
@@ -266,7 +279,11 @@ const SnippetViewer = ({ title: propTitle }) => {
   )
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1, transition: { duration: 0.4 } }}
+      exit={{ opacity: 0 }}
+    >
       <DocBreadcrumb label={post.title} />
       
       <div className="group relative">

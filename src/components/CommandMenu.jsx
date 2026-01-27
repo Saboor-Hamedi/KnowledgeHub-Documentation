@@ -23,7 +23,7 @@ export default function CommandMenu({ open, setOpen }) {
       
       const { data, error } = await supabase
         .from('posts')
-        .select('id, title, content, created_at')
+        .select('id, title, created_at')
         .order('created_at', { ascending: false })
 
       if (!error && data) {

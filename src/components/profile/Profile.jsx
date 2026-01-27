@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { User, Mail, Shield, Calendar, MapPin, Globe, Camera } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import LoadingSpinner from '../ui/LoadingSpinner'
 
 export default function Profile() {
   const [user, setUser] = useState(null)
@@ -67,11 +68,7 @@ export default function Profile() {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500" />
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   if (!user) {
