@@ -5,6 +5,7 @@ import Docs from './pages/Docs'
 import Updates from './pages/Updates'
 import Navbar from './components/layout/Navbar'
 
+import Profile from './components/profile/Profile'
 import FloatingCreateButton from './components/FloatingCreateButton'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/docs/*" element={<Docs />} />
           <Route path="/updates" element={<Updates />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
         <FloatingCreateButton />
       </div>
