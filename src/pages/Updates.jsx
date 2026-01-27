@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
 import { supabase } from '../lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -60,30 +61,6 @@ export default function Updates() {
     ]},
   ]
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-    })
-    fetchPosts()
-
-    // Check for incoming edit request from other pages
-    if (location.state?.editPost) {
-      const post = location.state.editPost
-      setEditingPost(post)
-      setTitle(post.title)
-      setContent(post.content)
-      setIsCreating(true)
-      // Clear state to prevent reopening on refresh
-      window.history.replaceState({}, document.title)
-    } else if (location.state?.create) {
-      resetForm()
-      setIsCreating(true)
-      window.history.replaceState({}, document.title)
-    }
-  }, [location.state])
-
-  // ... fetchPosts, handleSave, handleDelete, resetForm, startEdit ...
-
   async function fetchPosts() {
     setLoading(true)
     const { data, error } = await supabase
@@ -94,6 +71,14 @@ export default function Updates() {
     if (error) setError(error.message)
     else setPosts(data)
     setLoading(false)
+  }
+
+  function resetForm() {
+    setEditingPost(null)
+    setIsCreating(false)
+    setTitle('')
+    setContent('')
+    setError(null)
   }
 
   async function handleSave() {
@@ -141,20 +126,34 @@ export default function Updates() {
     }
   }
 
-  function resetForm() {
-    setEditingPost(null)
-    setIsCreating(false)
-    setTitle('')
-    setContent('')
-    setError(null)
-  }
-
   function startEdit(post) {
     setEditingPost(post)
     setTitle(post.title)
     setContent(post.content)
     setIsCreating(true)
   }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+    fetchPosts()
+
+    // Check for incoming edit request from other pages
+    if (location.state?.editPost) {
+      const post = location.state.editPost
+      setEditingPost(post)
+      setTitle(post.title)
+      setContent(post.content)
+      setIsCreating(true)
+      // Clear state to prevent reopening on refresh
+      window.history.replaceState({}, document.title)
+    } else if (location.state?.create) {
+      resetForm()
+      setIsCreating(true)
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
 
   // Loading state handled inside layout for better UX or here?
   // Let's keep it simple.
@@ -311,7 +310,7 @@ export default function Updates() {
                                       <div className="prose max-w-none text-gray-600 prose-p:text-sm prose-p:leading-relaxed prose-headings:text-gray-900 prose-a:text-indigo-600 prose-strong:text-gray-900 prose-pre:bg-transparent prose-pre:p-0">
                                         <ReactMarkdown 
                                           remarkPlugins={[remarkGfm]}
-                                          rehypePlugins={[rehypeRaw]}
+                                          rehypePlugins={[rehypeRaw, rehypeSanitize]}
                                           components={{
                                             pre: ({children}) => children,
                                             code: CodeBlock

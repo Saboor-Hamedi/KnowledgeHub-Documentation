@@ -2,6 +2,7 @@ import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
 import { Eye, Edit3, Columns } from 'lucide-react'
 import CodeBlock from './ui/CodeBlock'
 
@@ -67,7 +68,7 @@ export default function MarkdownEditor({ value, onChange, placeholder }) {
             {value ? (
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
+                rehypePlugins={[rehypeRaw, rehypeSanitize]}
                 components={{
                   pre: ({children}) => children,
                   code: CodeBlock
@@ -98,7 +99,7 @@ export default function MarkdownEditor({ value, onChange, placeholder }) {
                 {value ? (
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
+                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
                     components={{
                       pre: ({children}) => children,
                       code: CodeBlock
