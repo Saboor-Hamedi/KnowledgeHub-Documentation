@@ -8,6 +8,8 @@ import Navbar from './components/layout/Navbar'
 import Profile from './components/profile/Profile'
 import FloatingCreateButton from './components/FloatingCreateButton'
 
+import Settings from './pages/Settings'
+
 function App() {
   return (
     <Router>
@@ -20,6 +22,7 @@ function App() {
           <Route path="/docs/*" element={<Docs />} />
           <Route path="/updates" element={<Updates />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
         <FloatingCreateButton />
       </div>
