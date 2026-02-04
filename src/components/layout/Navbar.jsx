@@ -75,6 +75,10 @@ export default function Navbar() {
                   Knowledge<span className="text-indigo-500">Hub</span>
                 </span>
               </Link>
+              <div className="hidden sm:flex items-center gap-6 ml-10 border-l border-gray-100 pl-8">
+                 <Link to="/doc" className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-indigo-600 transition-colors">Doc</Link>
+                 <Link to="/blog" className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-indigo-600 transition-colors">Blog</Link>
+              </div>
             </div>
 
             <div className="flex-1 max-w-md hidden md:block">
@@ -95,7 +99,7 @@ export default function Navbar() {
 
             <div className="flex items-center gap-1 sm:gap-4">
               <a
-                href="https://github.com"
+                href="https://github.com/Saboor-Hamedi/knowledge-hub"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-gray-900 transition p-2 sm:p-1.5"
@@ -103,7 +107,7 @@ export default function Navbar() {
               >
                 <Github size={20} className="sm:size-4" />
               </a>
-              
+
               <button
                 onClick={() => setOpenCmd(true)}
                 className="md:hidden text-gray-500 hover:text-gray-900 p-2"
@@ -114,18 +118,22 @@ export default function Navbar() {
 
               <div className="flex items-center gap-1 sm:gap-4 border-l border-gray-100 pl-1 sm:pl-4">
                 {user && (
-                    <Link
-                      to="/updates"
-                      state={{ create: true }}
-                      className="hidden xs:flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-100 border border-indigo-200 transition"
-                    >
-                      <Plus size={14} /> New
-                    </Link>
+                  <Link
+                    to="/create"
+                    state={{ create: true, type: 'update' }}
+                    className="hidden xs:flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-100 border border-indigo-200 transition"
+                  >
+                    <Plus size={14} /> New
+                  </Link>
                 )}
 
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => user ? setIsDropdownOpen(!isDropdownOpen) : navigate('/login')}
+                    onClick={() =>
+                      user
+                        ? setIsDropdownOpen(!isDropdownOpen)
+                        : navigate("/login")
+                    }
                     className="flex items-center justify-center text-gray-500 hover:text-gray-900 transition p-1.5"
                     title={user ? "Account" : "Login"}
                   >
@@ -134,7 +142,7 @@ export default function Navbar() {
 
                   <AnimatePresence>
                     {user && isDropdownOpen && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
@@ -143,43 +151,82 @@ export default function Navbar() {
                         {user ? (
                           <>
                             <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Account</div>
-                              <div className="text-xs text-gray-900 truncate font-medium">{user.email}</div>
+                              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                                Account
+                              </div>
+                              <div className="text-xs text-gray-900 truncate font-medium">
+                                {user.email}
+                              </div>
                             </div>
-                            
+
                             <div className="py-1">
-                              <Link to="/profile" onClick={() => setIsDropdownOpen(false)} className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                  <User size={14} className="text-gray-400" /> Profile
+                              <Link
+                                to="/profile"
+                                onClick={() => setIsDropdownOpen(false)}
+                                className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                              >
+                                <User size={14} className="text-gray-400" />{" "}
+                                Profile
                               </Link>
-                              <Link to="/settings" onClick={() => setIsDropdownOpen(false)} className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                  <Settings size={14} className="text-gray-400" /> Settings
+                              <Link
+                                to="/settings"
+                                onClick={() => setIsDropdownOpen(false)}
+                                className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                              >
+                                <Settings size={14} className="text-gray-400" />{" "}
+                                Settings
                               </Link>
                               <button className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                  <HelpCircle size={14} className="text-gray-400" /> Help
+                                <HelpCircle
+                                  size={14}
+                                  className="text-gray-400"
+                                />{" "}
+                                Help
                               </button>
                               <button className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                  <CreditCard size={14} className="text-gray-400" /> Billing
+                                <CreditCard
+                                  size={14}
+                                  className="text-gray-400"
+                                />{" "}
+                                Billing
                               </button>
                             </div>
 
                             <div className="border-t border-gray-50"></div>
-                            
-                            <button onClick={handleSignOut} className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors">
-                                <LogOut size={14} /> Logout
+
+                            <button
+                              onClick={handleSignOut}
+                              className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                            >
+                              <LogOut size={14} /> Logout
                             </button>
                           </>
                         ) : (
                           <>
                             <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Account</div>
-                              <div className="text-xs text-gray-900 font-medium">Guest User</div>
+                              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                                Account
+                              </div>
+                              <div className="text-xs text-gray-900 font-medium">
+                                Guest User
+                              </div>
                             </div>
                             <div className="py-1">
-                              <Link to="/login" onClick={() => setIsDropdownOpen(false)} className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                  <LogIn size={14} className="text-gray-400" /> Login
+                              <Link
+                                to="/login"
+                                onClick={() => setIsDropdownOpen(false)}
+                                className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                              >
+                                <LogIn size={14} className="text-gray-400" />{" "}
+                                Login
                               </Link>
-                              <Link to="/signup" onClick={() => setIsDropdownOpen(false)} className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                  <Plus size={14} className="text-gray-400" /> Sign Up
+                              <Link
+                                to="/signup"
+                                onClick={() => setIsDropdownOpen(false)}
+                                className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                              >
+                                <Plus size={14} className="text-gray-400" />{" "}
+                                Sign Up
                               </Link>
                             </div>
                           </>
@@ -192,7 +239,6 @@ export default function Navbar() {
             </div>
           </div>
         </div>
-
       </nav>
     </>
   );

@@ -32,7 +32,7 @@ export default function FloatingCreateButton() {
         className="fixed bottom-6 right-6 z-40"
       >
         <Link
-          to="/updates"
+          to="/create"
           state={{ create: true }}
           className="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-full shadow-2xl hover:bg-indigo-500 transition-all hover:scale-110 active:scale-95 group"
           title="Create New Post"

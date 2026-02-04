@@ -22,6 +22,7 @@ export default function FeaturedPost() {
     const { data, error } = await supabase
       .from('posts')
       .select('*, profiles(username)')
+      .eq('type', 'documentation')
       .order('created_at', { ascending: true })
       .limit(1)
       .single()
@@ -37,7 +38,7 @@ export default function FeaturedPost() {
   }
 
   const handleEdit = () => {
-    navigate('/updates', { state: { editPost: post } })
+    navigate('/create', { state: { editPost: post } })
   }
 
   const handleDelete = async () => {

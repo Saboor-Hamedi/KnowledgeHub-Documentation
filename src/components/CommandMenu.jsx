@@ -23,7 +23,8 @@ export default function CommandMenu({ open, setOpen }) {
       
       const { data, error } = await supabase
         .from('posts')
-        .select('id, title, created_at')
+        .select('id, title, created_at, type')
+        .neq('type', 'update')
         .order('created_at', { ascending: false })
 
       if (!error && data) {
@@ -119,14 +120,22 @@ export default function CommandMenu({ open, setOpen }) {
                       <Command.Item 
                         key={post.id}
                         value={post.title}
-                        onSelect={() => runCommand(() => navigate(`/docs/snippet/${post.id}`))} 
+                        onSelect={() => runCommand(() => {
+                          if (post.type === 'blog') navigate(`/blog/${post.id}`)
+                          else navigate(`/doc/snippet/${post.id}`)
+                        })} 
                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 aria-selected:bg-indigo-50 aria-selected:text-indigo-600 cursor-pointer transition-colors group"
                       >
-                        <div className="p-1.5 rounded-md bg-indigo-50 text-indigo-500 group-aria-selected:bg-white">
-                          <BookOpen size={14} />
+                        <div className={`p-1.5 rounded-md ${post.type === 'blog' ? 'bg-amber-50 text-amber-500' : 'bg-indigo-50 text-indigo-500'} group-aria-selected:bg-white`}>
+                          {post.type === 'blog' ? <Sparkles size={14} /> : <BookOpen size={14} />}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-gray-900 font-medium">{post.title}</span>
+                        <div className="flex flex-col flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-900 font-medium">{post.title}</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${post.type === 'blog' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                              {post.type === 'blog' ? 'Blog' : 'Doc'}
+                            </span>
+                          </div>
                           <span className="text-[10px] text-gray-500 group-aria-selected:text-indigo-400 truncate max-w-[200px]">
                             {new Date(post.created_at).toLocaleDateString()}
                           </span>
@@ -173,14 +182,7 @@ export default function CommandMenu({ open, setOpen }) {
                     <FileText size={16} className="text-gray-400 group-aria-selected:text-indigo-500" />
                     <span>Documentation</span>
                   </Command.Item>
-                  <Command.Item 
-                    value="Updates"
-                    onSelect={() => runCommand(() => navigate('/updates'))}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-700 aria-selected:bg-indigo-50 aria-selected:text-indigo-600 cursor-pointer transition-colors"
-                  >
-                    <Layout size={16} className="text-gray-400 group-aria-selected:text-indigo-500" />
-                    <span>Updates</span>
-                  </Command.Item>
+
                   <Command.Item 
                     value="Database Schema"
                     onSelect={() => runCommand(() => navigate('/docs/schema'))}

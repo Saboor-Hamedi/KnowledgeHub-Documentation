@@ -3,7 +3,7 @@ import { Link, Route, Routes, useLocation, useParams, useNavigate } from 'react-
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronRight, Hash, Terminal, BookOpen, Settings, Cloud, Users, Palette, Shield, Layers, Database, Edit3, Trash2,
-  User, Calendar, Menu, X, ChevronDown
+  User, Calendar, Menu, X, ChevronDown, Plus
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -15,7 +15,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 const DocBreadcrumb = ({ label }) => (
   <div className="mb-8 flex items-center gap-2 text-sm text-gray-500">
-     <Link to="/docs" className="hover:text-indigo-500 cursor-pointer transition">Docs</Link>
+     <Link to="/doc" className="hover:text-indigo-500 cursor-pointer transition">Doc</Link>
      <ChevronRight size={14} />
      <span className="text-gray-600 font-medium truncate max-w-md">{label}</span>
   </div>
@@ -137,6 +137,26 @@ const SchemaDoc = () => (
 export default function Docs() {
   const location = useLocation()
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const [dbDocs, setDbDocs] = useState([])
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    async function fetchDbDocs() {
+      const { data } = await supabase
+        .from('posts')
+        .select('id, title')
+        .eq('type', 'documentation')
+        .order('title', { ascending: true })
+      
+      if (data) setDbDocs(data)
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    fetchDbDocs()
+  }, [])
   
   const sections = [
     { group: "Getting Started", items: [
@@ -153,6 +173,11 @@ export default function Docs() {
       { label: "Themes", icon: <Palette size={18} />, to: "/docs/themes" },
       { label: "Settings", icon: <Settings size={18} />, to: "/docs/settings" },
     ]},
+    { group: "Resources", items: dbDocs.map(doc => ({
+      label: doc.title,
+      icon: <Hash size={18} />,
+      to: `/docs/snippet/${doc.id}`
+    }))},
   ]
 
   return (
@@ -161,6 +186,16 @@ export default function Docs() {
         {/* Sidebar */}
         <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-20 self-start h-[calc(100vh-6rem)] overflow-y-auto pr-6 py-4">
           <nav className="space-y-8">
+            {user && (
+              <div className="px-4 mb-6">
+                <button 
+                  onClick={() => navigate('/create', { state: { create: true, type: 'documentation' } })}
+                  className="w-full h-10 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-colors border border-indigo-200"
+                >
+                  <Plus size={16} /> New Doc
+                </button>
+              </div>
+            )}
             {sections.map((section, idx) => (
               <div key={idx}>
                 <h5 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400 px-4">{section.group}</h5>
@@ -232,10 +267,10 @@ const SnippetViewer = ({ title: propTitle }) => {
       let query = supabase.from('posts').select('*, profiles(username)')
       
       if (propTitle) {
-        // Fetch by title (case insensitive)
-        query = query.ilike('title', propTitle)
+        // Fetch by title (case insensitive) - only for docs
+        query = query.ilike('title', propTitle).eq('type', 'documentation')
       } else if (id) {
-        // Fetch by UUID
+        // Fetch by UUID - allow any type if specifically linked by ID
         query = query.eq('id', id)
       }
 
@@ -249,7 +284,7 @@ const SnippetViewer = ({ title: propTitle }) => {
   }, [id, propTitle])
 
   const handleEdit = () => {
-    navigate('/updates', { state: { editPost: post } })
+    navigate('/create', { state: { editPost: post } })
   }
 
   const handleDelete = async () => {
