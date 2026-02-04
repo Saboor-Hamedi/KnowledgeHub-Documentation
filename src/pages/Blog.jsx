@@ -11,22 +11,7 @@ import { Link, useLocation, useNavigate, Routes, Route, useParams } from 'react-
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import CodeBlock from '../components/ui/CodeBlock'
-
-const SidebarItem = ({ icon, label, to, active }) => (
-  <Link 
-    to={to} 
-    className={`group flex items-center justify-between px-4 py-2 rounded-lg transition-colors duration-200 ${
-      active 
-        ? 'bg-indigo-500/10 text-indigo-500' 
-        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      {icon}
-      <span className="text-sm font-medium">{label}</span>
-    </div>
-  </Link>
-)
+import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
 
 export default function Blog() {
   const [posts, setPosts] = useState([])
@@ -37,6 +22,11 @@ export default function Blog() {
   const location = useLocation()
   const navigate = useNavigate()
   
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [postToDelete, setPostToDelete] = useState(null)
+  const [deleteOnSuccess, setDeleteOnSuccess] = useState(null)
+
   // Form State
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -58,12 +48,25 @@ export default function Blog() {
     setLoading(false)
   }
 
-  async function handleDelete(id) {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-      const { error } = await supabase.from('posts').delete().eq('id', id)
-      if (error) setError(error.message)
-      else fetchPosts()
+  function requestDelete(id, onSuccess) {
+    setPostToDelete(id)
+    setDeleteOnSuccess(() => onSuccess) // Function wrapper to store function in state
+    setDeleteModalOpen(true)
+  }
+
+  async function performDelete() {
+    if (!postToDelete) return
+    
+    const { error } = await supabase.from('posts').delete().eq('id', postToDelete)
+    if (error) {
+        setError(error.message)
+    } else {
+        await fetchPosts()
+        if (deleteOnSuccess) deleteOnSuccess()
     }
+    setDeleteModalOpen(false)
+    setPostToDelete(null)
+    setDeleteOnSuccess(null)
   }
 
   function startEdit(post) {
@@ -95,7 +98,8 @@ export default function Blog() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="flex pt-12 pb-24 border-border">
         {/* Sidebar */}
-        <aside className="hidden lg:block w-72 flex-shrink-0 sticky top-24 self-start h-[calc(100vh-8rem)] overflow-y-auto pr-8 py-4">
+        {/* Sidebar */}
+        <aside className="hidden lg:block fixed top-20 bottom-0 w-72 overflow-y-auto pr-8 py-4 z-40">
           <div className="space-y-10">
             {/* Recent Updates Mini-list */}
             <div>
@@ -104,14 +108,10 @@ export default function Blog() {
                 {recentPosts.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => {
-                        // Scroll to post logic could go here or just keep as info
-                        const el = document.getElementById(`post-${p.id}`);
-                        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }}
+                    onClick={() => navigate(`/blog/${p.id}`)}
                     className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex flex-col gap-0.5"
                   >
-                    <span className="font-medium truncate">{p.title}</span>
+                    <span className="font-medium line-clamp-2 leading-tight">{p.title}</span>
                     <span className="text-[10px] opacity-70">{new Date(p.created_at).toLocaleDateString()}</span>
                   </button>
                 ))}
@@ -123,7 +123,7 @@ export default function Blog() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 lg:pl-12 px-2 sm:px-6 lg:px-0">
+        <main className="flex-1 min-w-0 lg:ml-80 px-2 sm:px-6 lg:px-0">
             {loading && posts.length === 0 ? (
                  <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500" /></div>
             ) : (
@@ -144,14 +144,14 @@ export default function Blog() {
                         posts={posts} 
                         user={user} 
                         startEdit={startEdit} 
-                        handleDelete={handleDelete} 
+                        handleDelete={requestDelete} 
                       />
                     } />
                     <Route path=":id" element={
                         <BlogDetail 
                             user={user}
                             startEdit={startEdit}
-                            handleDelete={handleDelete}
+                            handleDelete={requestDelete}
                         />
                     } />
                   </Routes>
@@ -159,11 +159,21 @@ export default function Blog() {
             )}
         </main>
       </div>
+      <DeleteConfirmModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={performDelete}
+        title="Delete Post"
+        message="Are you sure you want to delete this post? This action cannot be undone."
+      />
     </div>
   )
 }
 
 const BlogFeed = ({ posts, user, startEdit, handleDelete }) => {
+    // Show only the latest post on the index page
+    const latestPost = posts.length > 0 ? posts[0] : null;
+
     return (
         <motion.div 
             key="list"
@@ -171,65 +181,61 @@ const BlogFeed = ({ posts, user, startEdit, handleDelete }) => {
             animate={{ opacity: 1 }}
             className="space-y-12"
         >
-            {posts.length === 0 ? (
+            {!latestPost ? (
                 <div className="text-center py-20 px-4 glass rounded-3xl border-dashed border-2 border-gray-300">
                     <div className="text-gray-500 italic">No posts published yet.</div>
                 </div>
             ) : (
                 <div className="space-y-12">
-                    {posts.map((post) => (
-                        <article key={post.id} id={`post-${post.id}`} className="group relative border-b border-gray-100 pb-12">
-                            {user && (
-                                <div className="absolute top-0 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        onClick={() => startEdit(post)}
-                                        className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
-                                        title="Edit this post"
-                                    >
-                                        <Edit3 size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(post.id)}
-                                        className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                        title="Delete this post"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            )}
-                            <div className="flex items-center gap-3 text-xs text-gray-500 mb-4">
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar size={12} />
-                                    {new Date(post.created_at).toLocaleDateString()}
-                                </span>
-                                <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
-                                <span className="flex items-center gap-1.5">
-                                    <User size={12} /> {post.profiles?.username || "Admin"}
-                                </span>
-                            </div>
-
-                            <Link to={`/blog/${post.id}`}>
-                                <h2 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-4">
-                                    {post.title}
-                                </h2>
-                            </Link>
-
-                            <div className="prose max-w-none text-gray-600 prose-headings:text-gray-900 prose-a:text-indigo-600 prose-strong:text-gray-900 prose-code:font-mono prose-pre:p-0 prose-pre:bg-transparent">
-                                <ReactMarkdown 
-                                    remarkPlugins={[remarkGfm]}
-                                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
-                                    components={{
-                                        pre: ({children}) => children,
-                                        code: CodeBlock
-                                    }}
+                     <article key={latestPost.id} id={`post-${latestPost.id}`} className="group relative border-b border-gray-100 pb-12">
+                        {user && (
+                            <div className="absolute top-0 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={() => startEdit(latestPost)}
+                                    className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+                                    title="Edit this post"
                                 >
-                                    {post.content}
-                                </ReactMarkdown>
+                                    <Edit3 size={16} />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(latestPost.id)}
+                                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                    title="Delete this post"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-gray-500 mb-4">
+                            <span className="flex items-center gap-1.5">
+                                <Calendar size={12} />
+                                {new Date(latestPost.created_at).toLocaleDateString()}
+                            </span>
+                            <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
+                            <span className="flex items-center gap-1.5">
+                                <User size={12} /> {latestPost.profiles?.username || "Admin"}
+                            </span>
+                        </div>
 
+                        <Link to={`/blog/${latestPost.id}`}>
+                            <h2 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-4">
+                                {latestPost.title}
+                            </h2>
+                        </Link>
 
-                        </article>
-                    ))}
+                        <div className="prose max-w-none text-gray-600 prose-headings:text-gray-900 prose-a:text-indigo-600 prose-strong:text-gray-900 prose-code:font-mono prose-pre:p-0 prose-pre:bg-transparent">
+                            <ReactMarkdown 
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeRaw]}
+                                components={{
+                                    pre: ({children}) => children,
+                                    code: CodeBlock
+                                }}
+                            >
+                                {latestPost.content}
+                            </ReactMarkdown>
+                        </div>
+                    </article>
                 </div>
             )}
         </motion.div>
@@ -300,7 +306,7 @@ const BlogDetail = ({ user, startEdit, handleDelete }) => {
                         </button>
                         <button
                             onClick={() => {
-                                handleDelete(post.id).then(() => navigate('/blog'))
+                                handleDelete(post.id, () => navigate('/blog'))
                             }}
                             className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50/50 rounded-lg transition-all"
                         >
@@ -316,7 +322,7 @@ const BlogDetail = ({ user, startEdit, handleDelete }) => {
                 <div className="prose max-w-none text-gray-700 prose-lg prose-headings:text-gray-900 prose-a:text-indigo-600 prose-strong:text-gray-900 prose-pre:bg-white prose-pre:border prose-pre:border-gray-100">
                     <ReactMarkdown 
                         remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                        rehypePlugins={[rehypeRaw]}
                         components={{
                             pre: ({children}) => children,
                             code: CodeBlock

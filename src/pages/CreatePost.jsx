@@ -119,12 +119,17 @@ export default function CreatePost() {
                 )}
 
                 <div className="space-y-6">
-                    <input
-                        type="text"
+                    <textarea
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={(e) => {
+                            setTitle(e.target.value);
+                            e.target.style.height = 'auto';
+                            e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
                         placeholder={postType === 'documentation' ? "Document Title..." : "Post Title..."}
-                        className="w-full bg-transparent text-4xl font-black text-gray-900 border-0 focus:ring-0 outline-none placeholder:text-gray-200"
+                        className="w-full bg-transparent text-4xl font-black text-gray-900 border-0 focus:ring-0 outline-none placeholder:text-gray-200 resize-none overflow-hidden"
+                        rows={1}
+                        style={{ height: 'auto' }}
                     />
                     <div className="min-h-[500px] border-t border-gray-50 pt-6">
                         <MarkdownEditor 

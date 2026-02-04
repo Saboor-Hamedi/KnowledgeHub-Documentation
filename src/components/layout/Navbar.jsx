@@ -67,7 +67,7 @@ export default function Navbar() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-12 sm:h-14 items-center justify-between gap-2 sm:gap-6">
             <div className="flex items-center flex-shrink-0">
-              <Link to="/docs" className="flex items-center gap-1.5">
+              <Link to="/doc" className="flex items-center gap-1.5">
                 <div className="rounded-md bg-indigo-500 p-0.5">
                   <Book className="h-4 w-4 text-white" />
                 </div>
@@ -76,8 +76,18 @@ export default function Navbar() {
                 </span>
               </Link>
               <div className="hidden sm:flex items-center gap-6 ml-10 border-l border-gray-100 pl-8">
-                 <Link to="/doc" className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-indigo-600 transition-colors">Doc</Link>
-                 <Link to="/blog" className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-indigo-600 transition-colors">Blog</Link>
+                <Link
+                  to="/doc"
+                  className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-indigo-600 transition-colors"
+                >
+                  Doc
+                </Link>
+                <Link
+                  to="/blog"
+                  className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-indigo-600 transition-colors"
+                >
+                  Blog
+                </Link>
               </div>
             </div>
 
@@ -120,7 +130,7 @@ export default function Navbar() {
                 {user && (
                   <Link
                     to="/create"
-                    state={{ create: true, type: 'update' }}
+                    state={{ create: true, type: "update" }}
                     className="hidden xs:flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-100 border border-indigo-200 transition"
                   >
                     <Plus size={14} /> New

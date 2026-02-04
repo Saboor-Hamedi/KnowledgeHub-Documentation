@@ -1,29 +1,43 @@
 import { Check, Copy } from 'lucide-react'
 import { useState } from 'react'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 export default function CodeBlock({ inline, className, children, ...props }) {
   const [copied, setCopied] = useState(false)
   const match = /language-(\w+)/.exec(className || '')
-  const language = match ? match[1] : ''
+  
+  // Magic Fix: Check if content starts with a language prefix (e.g. "js console.log")
+  // This handles cases where users type ```js code``` inline without newlines
+  const content = String(children)
+  const langPrefixMatch = !match && /^(js|javascript|jsx|ts|tsx|python|py|css|html|bash|sh|json|sql)\s+/.exec(content)
+  
+  const language = match ? match[1] : (langPrefixMatch ? langPrefixMatch[1] : '')
+  const displayContent = langPrefixMatch ? content.slice(langPrefixMatch[0].length) : content
 
-  if (inline) {
+  // Logic to determine if we should render as inline or block
+  const isBlock = match || langPrefixMatch || (inline === false) || (content.trim().includes('\n'))
+
+  // Inline Render
+  if (!isBlock) {
     return (
-      <code className={`${className} bg-gray-100 text-gray-800 rounded px-1 py-0.5 text-sm font-mono`} {...props}>
+      <code className={className} {...props}>
         {children}
       </code>
     )
   }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(String(children).replace(/\n$/, ''))
+    navigator.clipboard.writeText(displayContent.replace(/\n$/, ''))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Block Render - with Syntax Highlighter
   return (
-    <span className="group relative my-4 rounded-xl bg-gray-50 overflow-hidden block font-sans">
-      <span className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-100/50">
-        <span className="text-xs font-medium text-gray-500 uppercase font-mono not-italic">
+    <span className="group relative my-4 rounded-xl bg-gray-50 overflow-hidden block font-sans border border-gray-100 shadow-sm">
+      <span className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-50">
+        <span className="text-xs font-bold text-gray-500 uppercase font-mono tracking-wider">
           {language || 'text'}
         </span>
         <button
@@ -35,10 +49,22 @@ export default function CodeBlock({ inline, className, children, ...props }) {
           <span className="text-[10px] font-medium not-italic">{copied ? 'Copied!' : 'Copy'}</span>
         </button>
       </span>
-      <span className="overflow-x-auto p-4 bg-white/50 block">
-        <code className={`${className} !bg-transparent !p-0 text-sm font-mono text-gray-800 leading-relaxed block not-italic`} {...props}>
-          {children}
-        </code>
+      <span className="block bg-white text-sm relative">
+         <SyntaxHighlighter
+           language={language || 'text'}
+           style={oneLight}
+           customStyle={{
+             margin: 0,
+             padding: '1.25rem',
+             background: 'transparent',
+             fontSize: '0.9rem',
+             lineHeight: '1.6',
+           }}
+           wrapLongLines={true}
+           {...props}
+         >
+           {displayContent.replace(/\n$/, '')}
+         </SyntaxHighlighter>
       </span>
     </span>
   )

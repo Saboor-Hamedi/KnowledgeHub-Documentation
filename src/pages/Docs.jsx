@@ -134,49 +134,79 @@ const SchemaDoc = () => (
     </motion.div>
 )
 
+import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
+
 export default function Docs() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [dbDocs, setDbDocs] = useState([])
   const [user, setUser] = useState(null)
 
-  useEffect(() => {
-    async function fetchDbDocs() {
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [postToDelete, setPostToDelete] = useState(null)
+  const [deleteOnSuccess, setDeleteOnSuccess] = useState(null)
+
+  async function fetchDbDocs() {
       const { data } = await supabase
         .from('posts')
         .select('id, title')
         .eq('type', 'documentation')
         .order('title', { ascending: true })
       
-      if (data) setDbDocs(data)
-    }
+      if (data) {
+        // Filter out docs that are already in the main sections
+        const mainDocTitles = ['Introduction', 'Installation', 'Authentication', 'Snippet Schema', 'Collaboration', 'Cloud Sync', 'Themes', 'Settings']
+        const resources = data.filter(doc => !mainDocTitles.includes(doc.title))
+        setDbDocs(resources)
+      }
+  }
 
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
     })
-
     fetchDbDocs()
   }, [])
+
+  function requestDelete(id, onSuccess) {
+    setPostToDelete(id)
+    setDeleteOnSuccess(() => onSuccess)
+    setDeleteModalOpen(true)
+  }
+
+  async function performDelete() {
+    if (!postToDelete) return
+
+    const { error } = await supabase.from('posts').delete().eq('id', postToDelete)
+    if (error) {
+        alert("Error deleting post: " + error.message)
+    } else {
+        await fetchDbDocs() // Refresh sidebar
+        if (deleteOnSuccess) deleteOnSuccess()
+    }
+    setDeleteModalOpen(false)
+    setPostToDelete(null)
+    setDeleteOnSuccess(null)
+  }
   
   const sections = [
     { group: "Getting Started", items: [
-      { label: "Introduction", icon: <BookOpen size={18} />, to: "/docs" },
-      { label: "Installation", icon: <Terminal size={18} />, to: "/docs/installation" },
-      { label: "Authentication", icon: <Shield size={18} />, to: "/docs/auth" },
+      { label: "Introduction", icon: <BookOpen size={18} />, to: "/doc" },
+      { label: "Installation", icon: <Terminal size={18} />, to: "/doc/installation" },
+      { label: "Authentication", icon: <Shield size={18} />, to: "/doc/auth" },
     ]},
     { group: "Core Concepts", items: [
-      { label: "Snippet Schema", icon: <Layers size={18} />, to: "/docs/schema" },
-      { label: "Collaboration", icon: <Users size={18} />, to: "/docs/collab" },
-      { label: "Cloud Sync", icon: <Cloud size={18} />, to: "/docs/sync" },
+      { label: "Snippet Schema", icon: <Layers size={18} />, to: "/doc/schema" },
+      { label: "Collaboration", icon: <Users size={18} />, to: "/doc/collab" },
+      { label: "Cloud Sync", icon: <Cloud size={18} />, to: "/doc/sync" },
     ]},
-    { group: "Customization", items: [
-      { label: "Themes", icon: <Palette size={18} />, to: "/docs/themes" },
-      { label: "Settings", icon: <Settings size={18} />, to: "/docs/settings" },
-    ]},
+
     { group: "Resources", items: dbDocs.map(doc => ({
       label: doc.title,
       icon: <Hash size={18} />,
-      to: `/docs/snippet/${doc.id}`
+      to: `/doc/snippet/${doc.id}`
     }))},
   ]
 
@@ -184,7 +214,8 @@ export default function Docs() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="flex pt-12 pb-24 border-border">
         {/* Sidebar */}
-        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-20 self-start h-[calc(100vh-6rem)] overflow-y-auto pr-6 py-4">
+        {/* Sidebar */}
+        <aside className="hidden lg:block fixed top-20 bottom-0 w-64 overflow-y-auto pr-6 py-4 z-40">
           <nav className="space-y-8">
             {user && (
               <div className="px-4 mb-6">
@@ -214,15 +245,19 @@ export default function Docs() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 lg:pl-12 px-2 sm:px-6 lg:px-0 min-h-[80vh]">
+        <main className="flex-1 min-w-0 lg:ml-72 px-2 sm:px-6 lg:px-0 min-h-[80vh]">
             
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                  <Route index element={<Introduction />} />
-                  <Route path="installation" element={<SnippetViewer title="Installation" />} />
-                  <Route path="auth" element={<SnippetViewer title="Authentication" />} />
-                  <Route path="schema" element={<SchemaDoc />} />
-                  <Route path="snippet/:id" element={<SnippetViewer />} />
+                  <Route index element={<SnippetViewer title="Introduction" onRequestDelete={requestDelete} />} />
+                  <Route path="installation" element={<SnippetViewer title="Installation" onRequestDelete={requestDelete} />} />
+                  <Route path="auth" element={<SnippetViewer title="Authentication" onRequestDelete={requestDelete} />} />
+                  <Route path="schema" element={<SnippetViewer title="Snippet Schema" onRequestDelete={requestDelete} />} />
+                  <Route path="collab" element={<SnippetViewer title="Collaboration" onRequestDelete={requestDelete} />} />
+                  <Route path="sync" element={<SnippetViewer title="Cloud Sync" onRequestDelete={requestDelete} />} />
+                  <Route path="themes" element={<SnippetViewer title="Themes" onRequestDelete={requestDelete} />} />
+                  <Route path="settings" element={<SnippetViewer title="Settings" onRequestDelete={requestDelete} />} />
+                  <Route path="snippet/:id" element={<SnippetViewer onRequestDelete={requestDelete} />} />
                   <Route path="*" element={<div className="text-center py-20 text-gray-500">Documentation section coming soon.</div>} />
               </Routes>
             </AnimatePresence>
@@ -235,20 +270,26 @@ export default function Docs() {
                     </Link>
                 </div>
                 <div className="flex flex-col gap-2 text-right">
-                    <Link to="/docs/auth" className="text-indigo-500 hover:text-indigo-600 font-medium transition flex items-center gap-1">
+                    <Link to="/doc/auth" className="text-indigo-500 hover:text-indigo-600 font-medium transition flex items-center gap-1">
                         Authentication →
                     </Link>
                 </div>
             </div>
-
-           
         </main>
       </div>
+
+      <DeleteConfirmModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={performDelete}
+        title="Delete Document"
+        message="Are you sure you want to delete this document? This will remove it from the sidebar and database permanently."
+      />
     </div>
   )
 }
 
-const SnippetViewer = ({ title: propTitle }) => {
+const SnippetViewer = ({ title: propTitle, onRequestDelete }) => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [post, setPost] = useState(null)
@@ -288,14 +329,11 @@ const SnippetViewer = ({ title: propTitle }) => {
   }
 
   const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-        const { error } = await supabase.from('posts').delete().eq('id', post.id)
-        if (error) {
-            alert("Error deleting post: " + error.message)
-        } else {
+    if (onRequestDelete && post) {
+        onRequestDelete(post.id, () => {
             setPost(null)
-            navigate('/docs')
-        }
+            navigate('/doc')
+        })
     }
   }
 
@@ -309,7 +347,9 @@ const SnippetViewer = ({ title: propTitle }) => {
   if (!post) return (
     <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
       <div className="text-gray-400 mb-2">No content found for "{propTitle || id}"</div>
-      <div className="text-xs text-gray-500">Create a post with this title in the Updates section to see it here.</div>
+      <div className="text-xs text-gray-500">
+          To populate this page, create a new document with the exact title: <strong className="text-indigo-500">"{propTitle}"</strong>
+      </div>
     </div>
   )
 

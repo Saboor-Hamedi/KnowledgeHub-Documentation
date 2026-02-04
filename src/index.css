@@ -96,3 +96,24 @@ body {
 .prose code::after {
   content: "" !important;
 }
+
+/* Inline code highlighting */
+.prose p > code,
+.prose li > code,
+.prose blockquote > code,
+.prose table td > code {
+  background-color: rgba(99, 102, 241, 0.1); /* Indigo-50-ish with opacity */
+  color: #4338ca; /* Indigo-700 */
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Ensure code inside pre blocks has no background */
+.prose pre code {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  font-weight: inherit !important;
+}
