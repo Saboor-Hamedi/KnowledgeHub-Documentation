@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { motion } from 'framer-motion'
 import { Save, AlertCircle, ChevronLeft } from 'lucide-react'
@@ -9,7 +9,8 @@ export default function CreatePost() {
   const location = useLocation()
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
-  
+  const textareaRef = useRef(null)
+
   // Form State
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -17,6 +18,13 @@ export default function CreatePost() {
   const [editingPost, setEditingPost] = useState(null)
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
+
+  useLayoutEffect(() => {
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+        textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+    }
+  }, [title])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -120,22 +128,18 @@ export default function CreatePost() {
 
                 <div className="space-y-6">
                     <textarea
+                        ref={textareaRef}
                         value={title}
-                        onChange={(e) => {
-                            setTitle(e.target.value);
-                            e.target.style.height = 'auto';
-                            e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
+                        onChange={(e) => setTitle(e.target.value)}
                         placeholder={postType === 'documentation' ? "Document Title..." : "Post Title..."}
-                        className="w-full bg-transparent text-4xl font-black text-gray-900 border-0 focus:ring-0 outline-none placeholder:text-gray-200 resize-none overflow-hidden"
+                        className="w-full bg-transparent text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 border-0 focus:ring-0 outline-none placeholder:text-gray-200 resize-none overflow-hidden leading-tight py-2"
                         rows={1}
-                        style={{ height: 'auto' }}
                     />
-                    <div className="min-h-[500px] border-t border-gray-50 pt-6">
+                    <div className="min-h-[500px] border-t border-gray-100 pt-8">
                         <MarkdownEditor 
                             value={content} 
                             onChange={setContent} 
-                            placeholder="Write your content here..." 
+                            placeholder="Write your amazing content here..." 
                         />
                     </div>
                 </div>

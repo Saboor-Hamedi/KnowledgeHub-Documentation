@@ -109,10 +109,12 @@ export default function Blog() {
                   <button
                     key={p.id}
                     onClick={() => navigate(`/blog/${p.id}`)}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex flex-col gap-0.5"
+                    className="w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all flex flex-col gap-1 group/item hover:bg-gray-50"
                   >
-                    <span className="font-medium line-clamp-2 leading-tight">{p.title}</span>
-                    <span className="text-[10px] opacity-70">{new Date(p.created_at).toLocaleDateString()}</span>
+                    <span className="font-semibold text-gray-700 group-hover/item:text-indigo-600 line-clamp-2 leading-snug tracking-tight transition-colors">
+                      {p.title}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-medium">{new Date(p.created_at).toLocaleDateString()}</span>
                   </button>
                 ))}
               </div>
@@ -123,7 +125,7 @@ export default function Blog() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 lg:ml-80 px-2 sm:px-6 lg:px-0">
+        <main className="flex-1 min-w-0 lg:ml-80 px-4 sm:px-6 lg:px-8 lg:pr-12">
             {loading && posts.length === 0 ? (
                  <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500" /></div>
             ) : (
@@ -188,6 +190,17 @@ const BlogFeed = ({ posts, user, startEdit, handleDelete }) => {
             ) : (
                 <div className="space-y-12">
                      <article key={latestPost.id} id={`post-${latestPost.id}`} className="group relative border-b border-gray-100 pb-12">
+                         <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                            <span className="flex items-center gap-1.5">
+                                <Calendar size={12} />
+                                {new Date(latestPost.created_at).toLocaleDateString()}
+                            </span>
+                            <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
+                            <span className="flex items-center gap-1.5">
+                                <User size={12} /> {latestPost.profiles?.username || "Admin"}
+                            </span>
+                        </div>
+                        
                         {user && (
                             <div className="absolute top-0 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
@@ -206,24 +219,12 @@ const BlogFeed = ({ posts, user, startEdit, handleDelete }) => {
                                 </button>
                             </div>
                         )}
-                        <div className="flex items-center gap-3 text-xs text-gray-500 mb-4">
-                            <span className="flex items-center gap-1.5">
-                                <Calendar size={12} />
-                                {new Date(latestPost.created_at).toLocaleDateString()}
-                            </span>
-                            <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
-                            <span className="flex items-center gap-1.5">
-                                <User size={12} /> {latestPost.profiles?.username || "Admin"}
-                            </span>
-                        </div>
 
-                        <Link to={`/blog/${latestPost.id}`}>
-                            <h2 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-4">
-                                {latestPost.title}
-                            </h2>
-                        </Link>
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mb-8 leading-tight break-words hyphens-auto">
+                            {latestPost.title}
+                        </h1>
 
-                        <div className="prose max-w-none text-gray-600 prose-headings:text-gray-900 prose-a:text-indigo-600 prose-strong:text-gray-900 prose-code:font-mono prose-pre:p-0 prose-pre:bg-transparent">
+                        <div className="prose max-w-none text-gray-700 prose-lg prose-headings:text-gray-900 prose-a:text-indigo-600 prose-strong:text-gray-900 prose-pre:bg-white prose-pre:border prose-pre:border-gray-100">
                             <ReactMarkdown 
                                 remarkPlugins={[remarkGfm]}
                                 rehypePlugins={[rehypeRaw]}
@@ -315,7 +316,7 @@ const BlogDetail = ({ user, startEdit, handleDelete }) => {
                     </div>
                 )}
 
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-8 leading-tight">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mb-8 leading-tight break-words hyphens-auto">
                     {post.title}
                 </h1>
                 
