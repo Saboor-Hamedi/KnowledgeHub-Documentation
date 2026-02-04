@@ -1,0 +1,30 @@
+/* SidebarTitle.css */
+.sidebar-title {
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;    /* px-4 = 16px */
+  padding-right: 1rem;
+  padding-top: 0.5rem;   /* py-2 = 8px */
+  padding-bottom: 0.5rem;
+  border-radius: 0.5rem; /* rounded-lg = 8px */
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s; /* transition-colors + duration-200 */
+  color: #6b7280;        /* text-gray-500 */
+  gap: 12px;             /* keep your original gap if needed */
+}
+
+.sidebar-title:hover {
+  background-color: #f3f4f6; /* hover:bg-gray-100 */
+  color: #111827;            /* hover:text-gray-900 */
+}
+
+.sidebar-title.active {
+  background-color: rgba(99, 102, 241, 0.1); /* bg-indigo-500/10 */
+  color: #6366f1;                             /* text-indigo-500 */
+  font-weight: normal; /* Note: Tailwind doesn't add bold by default—remove if not needed */
+}
+
+.sidebar-icon {
+  width: 16px;
+  height: 16px;
+}

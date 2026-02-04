@@ -5,37 +5,16 @@ import {
   ChevronRight, Hash, Terminal, BookOpen, Settings, Cloud, Users, Palette, Shield, Layers, Database, Edit3, Trash2,
   User, Calendar, Menu, X, ChevronDown, Plus
 } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+
 import { supabase } from '../lib/supabase'
 import FeaturedPost from '../components/FeaturedPost'
-import SnippetsDemo from '../components/SnippetsDemo'
 import CodeBlock from '../components/ui/CodeBlock'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import BreadCrumb from '../components/ui/BreadCrumb'
+import SidebarTitle from "../components/ui/SidebarTitle";
+import { checkActiveRoute } from "../components/utils/checkActiveRoute";
 
-const DocBreadcrumb = ({ label }) => (
-  <div className="mb-8 flex items-center gap-2 text-sm text-gray-500">
-     <Link to="/doc" className="hover:text-indigo-500 cursor-pointer transition">Doc</Link>
-     <ChevronRight size={14} />
-     <span className="text-gray-600 font-medium truncate max-w-md">{label}</span>
-  </div>
-)
 
-const SidebarItem = ({ icon, label, to, active }) => (
-  <Link 
-    to={to} 
-    className={`group flex items-center justify-between px-4 py-2 rounded-lg transition-colors duration-200 ${
-      active 
-        ? 'bg-indigo-500/10 text-indigo-500' 
-        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      {icon}
-      <span className="text-sm font-medium">{label}</span>
-    </div>
-  </Link>
-)
 
 const Introduction = () => (
     <motion.div 
@@ -44,7 +23,7 @@ const Introduction = () => (
       exit={{ opacity: 0 }} 
       className="space-y-12"
     >
-        <DocBreadcrumb label="Introduction" />
+        <BreadCrumb label="Introduction" />
         <FeaturedPost />         
     </motion.div>
 )
@@ -56,7 +35,7 @@ const AuthenticationDoc = () => (
       exit={{ opacity: 0 }} 
       className="space-y-8"
     >
-        <DocBreadcrumb label="Authentication" />
+        <BreadCrumb label="Authentication" />
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Authentication</h1>
         <div className="text-lg text-gray-500 leading-relaxed">
             Securely manage your account and access your snippets across different environments.
@@ -87,7 +66,7 @@ const SchemaDoc = () => (
       exit={{ opacity: 0 }} 
       className="space-y-8"
     >
-        <DocBreadcrumb label="Snippet Schema" />
+        <BreadCrumb label="Snippet Schema" />
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Snippet Schema</h1>
         <div className="text-lg text-gray-500 leading-relaxed">
             Understand how your data is structured. KnowledgeHub uses a relational database model to ensure performance and data integrity.
@@ -134,7 +113,10 @@ const SchemaDoc = () => (
     </motion.div>
 )
 
+
+import SidebarLayout from '../components/layout/SidebarLayout'
 import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
+import ArticleLayout from '../components/layout/ArticleLayout'
 
 export default function Docs() {
   const location = useLocation()
@@ -193,99 +175,102 @@ export default function Docs() {
   
   const sections = [
     { group: "Getting Started", items: [
-      { label: "Introduction", icon: <BookOpen size={18} />, to: "/doc" },
-      { label: "Installation", icon: <Terminal size={18} />, to: "/doc/installation" },
-      { label: "Authentication", icon: <Shield size={18} />, to: "/doc/auth" },
+      { label: "Introduction", icon: <BookOpen size={16} />, to: "/doc" },
+      { label: "Installation", icon: <Terminal size={16} />, to: "/doc/installation" },
+      { label: "Authentication", icon: <Shield size={16} />, to: "/doc/auth" },
     ]},
     { group: "Core Concepts", items: [
-      { label: "Snippet Schema", icon: <Layers size={18} />, to: "/doc/schema" },
-      { label: "Collaboration", icon: <Users size={18} />, to: "/doc/collab" },
-      { label: "Cloud Sync", icon: <Cloud size={18} />, to: "/doc/sync" },
+      { label: "Snippet Schema", icon: <Layers size={16} />, to: "/doc/schema" },
+      { label: "Collaboration", icon: <Users size={16} />, to: "/doc/collab" },
+      { label: "Cloud Sync", icon: <Cloud size={16} />, to: "/doc/sync" },
     ]},
 
     { group: "Resources", items: dbDocs.map(doc => ({
       label: doc.title,
-      icon: <Hash size={18} />,
+      icon: <Hash size={16} />,
       to: `/doc/snippet/${doc.id}`
     }))},
   ]
 
+  const sidebarContent = (
+    <nav className="space-y-8">
+      {/* {user && (
+        <div className="px-4 mb-6">
+          <button 
+            onClick={() => navigate('/create', { state: { create: true, type: 'documentation' } })}
+            className="w-full h-10 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-colors border border-indigo-200"
+          >
+            <Plus size={16} /> New Doc
+          </button>
+        </div>
+      )} */}
+      {sections.map((section, idx) => (
+        <div key={idx}>
+          <h5 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400 px-4">
+            {section.group}
+          </h5>
+          <div className="space-y-0.5">
+            {section.items.map((item, i) => {
+              const isActive = checkActiveRoute(item.to, {
+                currentPath: location.pathname, 
+              });
+
+              return (
+                <SidebarTitle
+               key={i}
+               title={item.label}
+               isActive={isActive}
+               onClick={() => navigate(item.to)}
+               icon={item.icon}
+              
+              />
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="flex pt-12 pb-24 border-border">
-        {/* Sidebar */}
-        {/* Sidebar */}
-        <aside className="hidden lg:block fixed top-20 bottom-0 w-64 overflow-y-auto pr-6 py-4 z-40">
-          <nav className="space-y-8">
-            {user && (
-              <div className="px-4 mb-6">
-                <button 
-                  onClick={() => navigate('/create', { state: { create: true, type: 'documentation' } })}
-                  className="w-full h-10 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-colors border border-indigo-200"
-                >
-                  <Plus size={16} /> New Doc
-                </button>
-              </div>
-            )}
-            {sections.map((section, idx) => (
-              <div key={idx}>
-                <h5 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400 px-4">{section.group}</h5>
-                <div className="space-y-0.5">
-                  {section.items.map((item, i) => (
-                    <SidebarItem 
-                      key={i} 
-                      {...item} 
-                      active={location.pathname === item.to} 
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </nav>
-        </aside>
+    <SidebarLayout sidebar={sidebarContent} variant="docs">
+        <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+                <Route index element={<SnippetViewer title="Introduction" onRequestDelete={requestDelete} />} />
+                <Route path="installation" element={<SnippetViewer title="Installation" onRequestDelete={requestDelete} />} />
+                <Route path="auth" element={<SnippetViewer title="Authentication" onRequestDelete={requestDelete} />} />
+                <Route path="schema" element={<SnippetViewer title="Snippet Schema" onRequestDelete={requestDelete} />} />
+                <Route path="collab" element={<SnippetViewer title="Collaboration" onRequestDelete={requestDelete} />} />
+                <Route path="sync" element={<SnippetViewer title="Cloud Sync" onRequestDelete={requestDelete} />} />
+                <Route path="themes" element={<SnippetViewer title="Themes" onRequestDelete={requestDelete} />} />
+                <Route path="settings" element={<SnippetViewer title="Settings" onRequestDelete={requestDelete} />} />
+                <Route path="snippet/:id" element={<SnippetViewer onRequestDelete={requestDelete} />} />
+                <Route path="*" element={<div className="text-center py-20 text-gray-500">Documentation section coming soon.</div>} />
+            </Routes>
+        </AnimatePresence>
 
-        {/* Main Content */}
-        <main className="flex-1 min-w-0 lg:ml-72 px-2 sm:px-6 lg:px-0 min-h-[80vh]">
-            
-            <AnimatePresence mode="wait">
-              <Routes location={location} key={location.pathname}>
-                  <Route index element={<SnippetViewer title="Introduction" onRequestDelete={requestDelete} />} />
-                  <Route path="installation" element={<SnippetViewer title="Installation" onRequestDelete={requestDelete} />} />
-                  <Route path="auth" element={<SnippetViewer title="Authentication" onRequestDelete={requestDelete} />} />
-                  <Route path="schema" element={<SnippetViewer title="Snippet Schema" onRequestDelete={requestDelete} />} />
-                  <Route path="collab" element={<SnippetViewer title="Collaboration" onRequestDelete={requestDelete} />} />
-                  <Route path="sync" element={<SnippetViewer title="Cloud Sync" onRequestDelete={requestDelete} />} />
-                  <Route path="themes" element={<SnippetViewer title="Themes" onRequestDelete={requestDelete} />} />
-                  <Route path="settings" element={<SnippetViewer title="Settings" onRequestDelete={requestDelete} />} />
-                  <Route path="snippet/:id" element={<SnippetViewer onRequestDelete={requestDelete} />} />
-                  <Route path="*" element={<div className="text-center py-20 text-gray-500">Documentation section coming soon.</div>} />
-              </Routes>
-            </AnimatePresence>
-
-            {/* Pagination */}
-            <div className="mt-20 flex items-center justify-between border-t border-gray-200 pt-10">
-                <div className="flex flex-col gap-2">
-                    <Link to="#" className="text-indigo-500 hover:text-indigo-600 font-medium transition flex items-center gap-1">
-                        ← Background
-                    </Link>
-                </div>
-                <div className="flex flex-col gap-2 text-right">
-                    <Link to="/doc/auth" className="text-indigo-500 hover:text-indigo-600 font-medium transition flex items-center gap-1">
-                        Authentication →
-                    </Link>
-                </div>
+        {/* Pagination - Keep it here as footer for main content */}
+        <div className="mt-20 flex items-center justify-between border-t border-gray-200 pt-10">
+            <div className="flex flex-col gap-2">
+                <Link to="#" className="text-indigo-500 hover:text-indigo-600 font-medium transition flex items-center gap-1">
+                    ← Background
+                </Link>
             </div>
-        </main>
-      </div>
+            <div className="flex flex-col gap-2 text-right">
+                <Link to="/doc/auth" className="text-indigo-500 hover:text-indigo-600 font-medium transition flex items-center gap-1">
+                    Authentication →
+                </Link>
+            </div>
+        </div>
 
-      <DeleteConfirmModal 
+        <DeleteConfirmModal 
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={performDelete}
         title="Delete Document"
         message="Are you sure you want to delete this document? This will remove it from the sidebar and database permanently."
-      />
-    </div>
+        />
+    </SidebarLayout>
   )
 }
 
@@ -339,10 +324,10 @@ const SnippetViewer = ({ title: propTitle, onRequestDelete }) => {
 
   if (loading) return (
     <div>
-        <DocBreadcrumb label={propTitle || "Loading..."} />
-        <LoadingSpinner />
+      <BreadCrumb label={propTitle || "Loading..."} />
+      <LoadingSpinner />
     </div>
-  )
+  );
 
   if (!post) return (
     <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
@@ -359,58 +344,14 @@ const SnippetViewer = ({ title: propTitle, onRequestDelete }) => {
       animate={{ opacity: 1, transition: { duration: 0.4 } }}
       exit={{ opacity: 0 }}
     >
-      <DocBreadcrumb label={post.title} />
+      <BreadCrumb label={post.title} />
       
-      <div className="group relative">
-        <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-          <span className="flex items-center gap-1.5">
-            <Calendar size={12} />
-            {new Date(post.created_at).toLocaleDateString()}
-          </span>
-          <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
-          <span className="flex items-center gap-1.5">
-            <User size={12} /> {post.profiles?.username || "Admin"}
-          </span>
-        </div>
-
-        {user && (
-          <div className="absolute top-0 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={handleEdit}
-              className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
-              title="Edit this post"
-            >
-              <Edit3 size={16} />
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-              title="Delete this post"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        )}
-
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">{post.title}</h1>
-        <div className="prose max-w-none text-gray-600 prose-headings:text-gray-900 prose-a:text-indigo-600 prose-strong:text-gray-900 prose-code:font-mono prose-pre:p-0 prose-pre:bg-transparent">
-           <ReactMarkdown 
-             remarkPlugins={[remarkGfm]}
-             components={{
-               pre: ({children}) => children,
-               code: CodeBlock
-             }}
-           >
-             {post.content}
-           </ReactMarkdown>
-        </div>
-
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <div className="text-xs text-gray-500 italic">
-            Last updated on {new Date(post.created_at).toLocaleDateString()}
-          </div>
-        </div>
-      </div>
+      <ArticleLayout 
+        post={post}
+        user={user}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </motion.div>
   )
 }
